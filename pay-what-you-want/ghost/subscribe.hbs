@@ -1,0 +1,118 @@
+
+
+<div class="subscription-form-container">
+
+
+{{!-- We still want the data-members-form if we want to let ghost handle non paying subscriptions --}}
+    <form data-members-form="subscribe">
+        <div class="input-container" style="margin-bottom: 24px">
+            <label for="email">Email</label>
+            <input data-members-email type="email" id="email" />
+        </div>
+        <div>
+            <div class="pricings-container">
+            <label class="pricings-label">Choose your formula</label>
+                <div class="pricing-container">
+                    <label>Discover</label>
+                    <input type="radio" name="radio" value="free">
+                </div>
+                             <div class="pricing-container">
+                    <label>Monthly</label>
+                    <input type="radio" name="radio" value="monthly" checked="checked">
+                </div>
+                    <div class="pricing-container">
+                    <label>Yearly</label>
+                    <input type="radio" name="radio" value="yearly">
+                </div>
+            </div>
+        </div>
+
+        {{!-- BUTTONS ARE DIFFERENT FOR EACH PLAN --}}
+
+        {{!-- Free plan --}}
+        <div class="buttons-container" id="free-buttons-container">
+            <button class="reverse-button" type="submit" >discover</button>
+        </div>
+
+        {{!-- Monthly plan --}}
+        <div class="buttons-container show" id="monthly-buttons-container">
+            <div class="input-container for-price">
+                <label for="price"> Prix mensuel libre <span>4€
+                        minimum</span></label>
+                <div class="input-price">
+                    <input type="number" min="4" value="4" placeholder="" id="price" name="price"></input>
+                    <span>€</span>
+                </div>
+            </div>
+            <button type="button" class="pay-button" data-plan='monthly'>Subscribe</button>
+        </div>
+
+        {{!-- Yearly plan --}}
+        <div class="buttons-container" id="yearly-buttons-container">
+            <div class="input-container for-price">
+                <label for="price">Free annual price <span>
+                         50€ minimum </span></label>
+                <div class="input-price">
+                    <input type="number" min="50" value="50" placeholder=""  name="price"></input>
+                    <span>€</span>
+                </div>
+            </div>
+            <button type="button" class="pay-button" data-plan='yearly'>Subscribe</button>
+        </div>
+
+        <p id="error">
+            <!-- error message will appear here -->
+        </p>
+
+    </form>
+
+
+
+    <script>
+
+        document.querySelectorAll('.pricing-option').forEach((element) => {
+            element.addEventListener('click', (ev) => {
+                // Hide buttons
+                document.querySelectorAll('.buttons-container').forEach(el => {
+                    el.classList.remove("show");
+                })
+                // show right buttons
+                var plan = ev.currentTarget.value;
+                document.getElementById("" + plan + "-buttons-container").classList.add("show")
+
+            })
+        })
+
+
+        document.querySelectorAll(".pay-button").forEach(e => e.addEventListener("click", function (ev) {
+            // remove error
+            document.getElementById("error").innerHTML = ""
+            var plan = ev.target.dataset.plan
+            var price = document.querySelector(`#${plan}-buttons-container input[type="number"]`).value;
+            var email = document.getElementById("email").value;
+            // no email or no price : ask user to fill all
+            if (!email || !price) {
+                document.getElementById("error").innerHTML = "Please fill in all the fields";
+                return;
+            }
+            if (!(parseInt(price) >= 4)) {
+                document.getElementById("error").innerHTML = "Please fill in a minimum price ";
+                return;
+            }
+            // call our custom backend
+            fetch("[YOUR_API_URL]/api/get-stripe-session", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "*/*"
+                },
+                body: JSON.stringify({ price, email, plan })
+            }).then(function (result) {
+                return result.json()
+            }).then(function (json) {  
+            // post payment redirection 
+                document.location = json.url
+            })
+        }))
+    </script>
+    </div>
